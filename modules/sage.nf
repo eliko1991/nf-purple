@@ -2,9 +2,12 @@
 process runSage {
     tag "SAGE on ${params.tumor}" + (params.normal ? " vs ${params.normal}" : "")
     publishDir "${params.outdir}", mode: 'copy'
+
+    time '8h'
     cpus params.cores
-    memory params.memory
-    time '4h'
+    memory = { 8.GB * task.attempt }
+    errorStrategy = { task.exitStatus in [137,139,140,143] ? "retry" : "terminate" }
+    maxRetries = 2
 
     input:
     tuple val(tumor), path(tumorBam), path(tumorBai)
